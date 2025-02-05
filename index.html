@@ -128,11 +128,8 @@
             document.getElementById('speed').value = speeds[this.value];
         });
 
-        function calculateProgress() {
-            const totalLength = document.getElementById('totalLength').value;
-            const currentProgress = document.getElementById('currentProgress').value;
-            const speed = parseFloat(document.getElementById('speed').value);
-            const daysPlan = document.getElementById('daysPlan').value.split(',').map(Number);
+        function calculateProgressData(params) {
+            const { totalLength, currentProgress, speed, daysPlan } = params;
 
             function timeToSeconds(time) {
                 const [hours, minutes, seconds] = time.split(':').map(Number);
@@ -151,14 +148,35 @@
             const remainingSeconds = (totalSeconds - currentSeconds) / speed;
             const progressPercentage = ((currentSeconds / totalSeconds) * 100).toFixed(1);
 
-            let dailyPlanOutput = '';
-            daysPlan.forEach(days => {
-                const dailySeconds = Math.floor(remainingSeconds / days);
-                dailyPlanOutput += `Over ${days} days: ~${secondsToTime(dailySeconds)}<br>`;
-            });
+            const dailyPlans = daysPlan.map(days => ({
+                days,
+                dailyTime: secondsToTime(Math.floor(remainingSeconds / days))
+            }));
 
-            document.getElementById('progressPercentage').textContent = `Progress Percentage: ${progressPercentage}%`;
-            document.getElementById('remainingTime').textContent = `Remaining Time (at ${speed}x speed): ${secondsToTime(Math.floor(remainingSeconds))}`;
+            return {
+                progressPercentage,
+                remainingTime: secondsToTime(Math.floor(remainingSeconds)),
+                speed,
+                dailyPlans
+            };
+        }
+
+        function calculateProgress() {
+            const params = {
+                totalLength: document.getElementById('totalLength').value,
+                currentProgress: document.getElementById('currentProgress').value,
+                speed: parseFloat(document.getElementById('speed').value),
+                daysPlan: document.getElementById('daysPlan').value.split(',').map(Number)
+            };
+
+            const result = calculateProgressData(params);
+
+            document.getElementById('progressPercentage').textContent = `Progress Percentage: ${result.progressPercentage}%`;
+            document.getElementById('remainingTime').textContent = `Remaining Time (at ${result.speed}x speed): ${result.remainingTime}`;
+
+            const dailyPlanOutput = result.dailyPlans
+                .map(plan => `Over ${plan.days} days: ~${plan.dailyTime}`)
+                .join('<br>');
             document.getElementById('dailyPlan').innerHTML = `Daily Plan:<br>${dailyPlanOutput}`;
 
             document.getElementById('results').style.display = 'block';
