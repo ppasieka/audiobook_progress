@@ -23,7 +23,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 2rem;
             width: 100%;
-            max-width: 400px;
+            max-width: 480px;
             margin: 0.5rem auto;
             box-sizing: border-box;
         }
@@ -48,6 +48,7 @@
             border: 1px solid #90caf9;
             border-radius: 8px;
             font-size: 1rem;
+            box-sizing: border-box;
         }
         .form-group input[type="range"] {
             padding: 0;
@@ -66,6 +67,14 @@
         }
         button:hover {
             background: #1565c0;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        button:disabled:hover {
+            background: #cccccc;
         }
         .button-group {
             display: flex;
@@ -95,14 +104,23 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem;
+            padding: 0.8rem;
             margin-bottom: 0.5rem;
             background: #e3f2fd;
             border-radius: 4px;
-            transition: background 0.2s;
+            box-sizing: border-box;
         }
         .book-item:hover {
             background: #bbdefb;
+        }
+        .book-item .buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .book-item button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            min-width: 60px;
         }
         .book-title {
             cursor: pointer;
@@ -134,7 +152,7 @@
 <body>
     <div class="container">
         <h1>Audiobook Progress Calculator</h1>
-        <div id="savedBooks" class="saved-books">
+        <div id="savedBooks" class="saved-books" style="display: none;">
             <h2>Saved Books</h2>
             <div id="booksList"></div>
         </div>
@@ -166,8 +184,8 @@
                 <input type="text" id="daysPlan" name="daysPlan" value="5,7">
             </div>
             <div class="button-group">
-                <button type="button" onclick="calculateProgress()">Calculate</button>
-                <button type="button" onclick="saveBook()" class="save-btn" id="saveButton">Save Book</button>
+                <button type="button" onclick="calculateProgress()">Calculate Progress</button>
+                <button type="button" class="save-btn" onclick="saveBook()" id="saveButton" disabled>Save Book</button>
             </div>
         </form>
         <div class="results" id="results" style="display: none;">
@@ -187,16 +205,12 @@
 
         // Add event listener for title input validation
         document.getElementById('bookTitle').addEventListener('input', function() {
-            document.getElementById('saveButton').disabled = this.value.trim() === '';
+            const saveButton = document.getElementById('saveButton');
+            saveButton.disabled = !this.value.trim();
         });
 
         function saveBook() {
-            const bookTitle = document.getElementById('bookTitle').value.trim();
-            if (!bookTitle) {
-                alert('Please enter a book title');
-                return;
-            }
-
+            const bookTitle = document.getElementById('bookTitle').value;
             const bookData = {
                 title: bookTitle,
                 totalLength: document.getElementById('totalLength').value,
@@ -205,18 +219,22 @@
                 daysPlan: document.getElementById('daysPlan').value
             };
 
-            let books = JSON.parse(localStorage.getItem('books') || '{}');
-            // Check for existing book with same title
-            const existingId = Object.keys(books).find(id => books[id].title === bookTitle);
-            const bookId = existingId || Date.now().toString();
-            books[bookId] = bookData;
+            let books = JSON.parse(localStorage.getItem('books') || '[]');
+            const existingIndex = books.findIndex(book => book.title === bookTitle);
+            
+            if (existingIndex !== -1) {
+                books[existingIndex] = { ...bookData, id: existingIndex };
+            } else {
+                books.push({ ...bookData, id: books.length });
+            }
+            
             localStorage.setItem('books', JSON.stringify(books));
             renderBookList();
         }
 
         function loadBook(bookId) {
-            const books = JSON.parse(localStorage.getItem('books') || '{}');
-            const book = books[bookId];
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
+            const book = books.find(b => b.id === parseInt(bookId));
             if (book) {
                 document.getElementById('bookTitle').value = book.title;
                 document.getElementById('totalLength').value = book.totalLength;
@@ -237,23 +255,42 @@
 
         function deleteBook(bookId) {
             if (confirm('Are you sure you want to delete this book?')) {
-                let books = JSON.parse(localStorage.getItem('books') || '{}');
-                delete books[bookId];
-                localStorage.setItem('books', JSON.stringify(books));
+                let books = JSON.parse(localStorage.getItem('books') || '[]');
+                const updatedBooks = books.filter(b => b.id !== parseInt(bookId));
+                // Reassign IDs to maintain sequential order
+                const booksWithNewIds = updatedBooks.map((book, index) => ({
+                    ...book,
+                    id: index
+                }));
+                localStorage.setItem('books', JSON.stringify(booksWithNewIds));
                 renderBookList();
             }
         }
 
         function renderBookList() {
-            const booksList = document.getElementById('booksList');
-            const books = JSON.parse(localStorage.getItem('books') || '{}');
+            const savedBooksSection = document.getElementById('savedBooks');
+            const books = JSON.parse(localStorage.getItem('books') || '[]');
             
-            booksList.innerHTML = Object.entries(books).map(([id, book]) => `
+            if (books.length === 0) {
+                savedBooksSection.style.display = 'none';
+                return;
+            }
+            
+            savedBooksSection.style.display = 'block';
+            const bookList = books.map(book => `
                 <div class="book-item">
-                    <span class="book-title" onclick="loadBook('${id}')">${book.title}</span>
-                    <button class="delete-btn" onclick="deleteBook('${id}')">×</button>
+                    <span>${book.title}</span>
+                    <div class="buttons">
+                        <button onclick="loadBook(${book.id})">Load</button>
+                        <button onclick="deleteBook(${book.id})">Delete</button>
+                    </div>
                 </div>
             `).join('');
+            
+            savedBooksSection.innerHTML = `
+                <h2>Saved Books</h2>
+                ${bookList}
+            `;
         }
 
         document.getElementById('totalLengthSlider').addEventListener('input', function () {
