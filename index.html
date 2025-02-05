@@ -9,12 +9,13 @@
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 1.5rem;
             background-color: #e3f2fd;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            scroll-behavior: smooth;
         }
         .container {
             background: #ffffff;
@@ -23,6 +24,8 @@
             padding: 2rem;
             width: 100%;
             max-width: 400px;
+            margin: 0.5rem auto;
+            box-sizing: border-box;
         }
         .container h1 {
             text-align: center;
@@ -131,6 +134,10 @@
 <body>
     <div class="container">
         <h1>Audiobook Progress Calculator</h1>
+        <div id="savedBooks" class="saved-books">
+            <h2>Saved Books</h2>
+            <div id="booksList"></div>
+        </div>
         <form id="progressForm">
             <div class="form-group">
                 <label for="bookTitle">Book Title:</label>
@@ -160,7 +167,7 @@
             </div>
             <div class="button-group">
                 <button type="button" onclick="calculateProgress()">Calculate</button>
-                <button type="button" onclick="saveBook()" class="save-btn">Save Book</button>
+                <button type="button" onclick="saveBook()" class="save-btn" id="saveButton">Save Book</button>
             </div>
         </form>
         <div class="results" id="results" style="display: none;">
@@ -168,16 +175,19 @@
             <p id="remainingTime"></p>
             <p id="dailyPlan"></p>
         </div>
-        <div id="savedBooks" class="saved-books">
-            <h2>Saved Books</h2>
-            <div id="booksList"></div>
-        </div>
     </div>
 
     <script>
         // Load saved books on page load
         window.addEventListener('load', () => {
             renderBookList();
+            // Initial state check for save button
+            document.getElementById('saveButton').disabled = document.getElementById('bookTitle').value.trim() === '';
+        });
+
+        // Add event listener for title input validation
+        document.getElementById('bookTitle').addEventListener('input', function() {
+            document.getElementById('saveButton').disabled = this.value.trim() === '';
         });
 
         function saveBook() {
@@ -196,7 +206,9 @@
             };
 
             let books = JSON.parse(localStorage.getItem('books') || '{}');
-            const bookId = Date.now().toString();
+            // Check for existing book with same title
+            const existingId = Object.keys(books).find(id => books[id].title === bookTitle);
+            const bookId = existingId || Date.now().toString();
             books[bookId] = bookData;
             localStorage.setItem('books', JSON.stringify(books));
             renderBookList();
