@@ -163,12 +163,12 @@
             </div>
             <div class="form-group">
                 <label for="totalLength">Total Length:</label>
-                <input type="range" id="totalLengthSlider" min="1" max="24" value="8">
+                <input type="range" id="totalLengthSlider" min="1" max="160" value="32" step="1">
                 <input type="text" id="totalLength" value="8:00:00">
             </div>
             <div class="form-group">
                 <label for="currentProgress">Current Progress:</label>
-                <input type="range" id="currentProgressSlider" min="0" max="24" value="1">
+                <input type="range" id="currentProgressSlider" min="0" max="160" value="4" step="1">
                 <input type="text" id="currentProgress" value="1:00:00">
             </div>
             <div class="form-group">
@@ -241,10 +241,10 @@
                 document.getElementById('daysPlan').value = book.daysPlan;
                 
                 // Update sliders
-                const totalHours = parseInt(book.totalLength.split(':')[0]);
-                const currentHours = parseInt(book.currentProgress.split(':')[0]);
-                document.getElementById('totalLengthSlider').value = totalHours;
-                document.getElementById('currentProgressSlider').value = currentHours;
+                const totalQuarters = Math.floor(timeToQuarters(book.totalLength));
+                const currentQuarters = Math.floor(timeToQuarters(book.currentProgress));
+                document.getElementById('totalLengthSlider').value = totalQuarters;
+                document.getElementById('currentProgressSlider').value = currentQuarters;
                 
                 // Calculate after loading
                 calculateProgress();
@@ -292,19 +292,28 @@
         }
 
         document.getElementById('totalLengthSlider').addEventListener('input', function () {
-            const hours = this.value;
-            document.getElementById('totalLength').value = `${hours}:00:00`;
+            const quarters = parseInt(this.value);
+            const hours = Math.floor(quarters / 4);
+            const minutes = (quarters % 4) * 15;
+            document.getElementById('totalLength').value = `${hours}:${minutes.toString().padStart(2, '0')}:00`;
         });
 
         document.getElementById('currentProgressSlider').addEventListener('input', function () {
-            const hours = this.value;
-            document.getElementById('currentProgress').value = `${hours}:00:00`;
+            const quarters = parseInt(this.value);
+            const hours = Math.floor(quarters / 4);
+            const minutes = (quarters % 4) * 15;
+            document.getElementById('currentProgress').value = `${hours}:${minutes.toString().padStart(2, '0')}:00`;
         });
 
         document.getElementById('speedSlider').addEventListener('input', function () {
             const speeds = [0.75, 1, 1.25, 1.5, 1.75];
             document.getElementById('speed').value = speeds[this.value];
         });
+
+        function timeToQuarters(time) {
+            const [hours, minutes, seconds] = time.split(':').map(Number);
+            return hours * 4 + Math.floor(minutes / 15);
+        }
 
         function calculateProgressData(params) {
             const { totalLength, currentProgress, speed, daysPlan } = params;
