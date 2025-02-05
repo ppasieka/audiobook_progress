@@ -33,6 +33,14 @@
             color: #0d47a1;
             margin-bottom: 1rem;
             font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .container h1 img {
+            height: 1.5rem;
+            width: auto;
         }
         .form-group {
             margin-bottom: 1rem;
@@ -148,10 +156,17 @@
             margin: 0.5rem 0;
             color: #0d47a1;
         }
+        .audiobook-icon {
+            display: block;
+            width: auto;
+            height: 4rem;
+            margin: 0 auto 0.5rem auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="icon.png" alt="Audiobook icon" class="audiobook-icon">
         <h1>Audiobook Progress Calculator</h1>
         <div id="savedBooks" class="saved-books" style="display: none;">
             <h2>Saved Books</h2>
