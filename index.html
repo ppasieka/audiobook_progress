@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audiobook Progress Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #e3f2fd;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        .container h1 {
+            text-align: center;
+            color: #0d47a1;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #1a237e;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-group input[type="range"] {
+            padding: 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            background: #1976d2;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .results {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+        }
+        .results p {
+            margin: 0.5rem 0;
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Audiobook Progress Calculator</h1>
+        <form id="progressForm">
+            <div class="form-group">
+                <label for="totalLength">Total Length (HH:MM:SS):</label>
+                <input type="text" id="totalLength" name="totalLength">
+                <input type="range" id="totalLengthSlider" min="0" max="50" value="0" step="1">
+                <small>Use the slider for rough adjustment (in hours, 0 to 50).</small>
+            </div>
+            <div class="form-group">
+                <label for="currentProgress">Current Progress (HH:MM:SS):</label>
+                <input type="text" id="currentProgress" name="currentProgress">
+                <input type="range" id="currentProgressSlider" min="0" max="50" value="0" step="1">
+                <small>Use the slider for rough adjustment (in hours, 0 to 50).</small>
+            </div>
+            <div class="form-group">
+                <label for="speed">Speed (e.g., 1.25):</label>
+                <input type="text" id="speed" name="speed" value="1.25">
+                <input type="range" id="speedSlider" min="0" max="4" step="1">
+                <small>Fixed speed options: 0.75, 1, 1.25, 1.5, 1.75.</small>
+            </div>
+            <div class="form-group">
+                <label for="daysPlan">Days Plan (comma-separated):</label>
+                <input type="text" id="daysPlan" name="daysPlan" value="5,7">
+            </div>
+            <button type="button" onclick="calculateProgress()">Calculate</button>
+        </form>
+        <div class="results" id="results" style="display: none;">
+            <p id="progressPercentage"></p>
+            <p id="remainingTime"></p>
+            <p id="dailyPlan"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('totalLengthSlider').addEventListener('input', function () {
+            const hours = this.value;
+            document.getElementById('totalLength').value = `${hours}:00:00`;
+        });
+
+        document.getElementById('currentProgressSlider').addEventListener('input', function () {
+            const hours = this.value;
+            document.getElementById('currentProgress').value = `${hours}:00:00`;
+        });
+
+        document.getElementById('speedSlider').addEventListener('input', function () {
+            const speeds = [0.75, 1, 1.25, 1.5, 1.75];
+            document.getElementById('speed').value = speeds[this.value];
+        });
+
+        function calculateProgress() {
+            const totalLength = document.getElementById('totalLength').value;
+            const currentProgress = document.getElementById('currentProgress').value;
+            const speed = parseFloat(document.getElementById('speed').value);
+            const daysPlan = document.getElementById('daysPlan').value.split(',').map(Number);
+
+            function timeToSeconds(time) {
+                const [hours, minutes, seconds] = time.split(':').map(Number);
+                return hours * 3600 + minutes * 60 + seconds;
+            }
+
+            function secondsToTime(seconds) {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = Math.floor(seconds % 60);
+                return `${h}h ${m}m ${s}s`;
+            }
+
+            const totalSeconds = timeToSeconds(totalLength);
+            const currentSeconds = timeToSeconds(currentProgress);
+            const remainingSeconds = (totalSeconds - currentSeconds) / speed;
+            const progressPercentage = ((currentSeconds / totalSeconds) * 100).toFixed(1);
+
+            let dailyPlanOutput = '';
+            daysPlan.forEach(days => {
+                const dailySeconds = Math.floor(remainingSeconds / days);
+                dailyPlanOutput += `Over ${days} days: ~${secondsToTime(dailySeconds)}<br>`;
+            });
+
+            document.getElementById('progressPercentage').textContent = `Progress Percentage: ${progressPercentage}%`;
+            document.getElementById('remainingTime').textContent = `Remaining Time (at ${speed}x speed): ${secondsToTime(Math.floor(remainingSeconds))}`;
+            document.getElementById('dailyPlan').innerHTML = `Daily Plan:<br>${dailyPlanOutput}`;
+
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
