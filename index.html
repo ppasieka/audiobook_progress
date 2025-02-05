@@ -103,6 +103,8 @@
             margin-top: 2rem;
             border-top: 2px solid #bbdefb;
             padding-top: 1rem;
+            transition: height 0.3s ease-in-out;
+            overflow: hidden;
         }
         .saved-books h2 {
             color: #0d47a1;
@@ -118,6 +120,19 @@
             background: #e3f2fd;
             border-radius: 4px;
             box-sizing: border-box;
+        }
+
+        .book-item.new-item {
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .book-item:hover {
             background: #bbdefb;
@@ -237,13 +252,19 @@
             const existingIndex = books.findIndex(book => book.title === bookTitle);
             
             if (existingIndex !== -1) {
-                books[existingIndex] = { ...bookData, id: existingIndex };
+                books[existingIndex] = { ...bookData, id: existingIndex, isNew: true };
             } else {
-                books.push({ ...bookData, id: books.length });
+                books.push({ ...bookData, id: books.length, isNew: true });
             }
             
             localStorage.setItem('books', JSON.stringify(books));
             renderBookList();
+            
+            // Remove the 'isNew' flag after animation
+            setTimeout(() => {
+                books = books.map(book => ({ ...book, isNew: false }));
+                localStorage.setItem('books', JSON.stringify(books));
+            }, 300);
         }
 
         function loadBook(bookId) {
@@ -295,7 +316,7 @@
             
             savedBooksSection.style.display = 'block';
             const bookList = books.map(book => `
-                <div class="book-item">
+                <div class="book-item${book.isNew ? ' new-item' : ''}">
                     <span>${book.title}</span>
                     <div class="buttons">
                         <button onclick="loadBook(${book.id})">Load</button>
