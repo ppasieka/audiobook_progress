@@ -122,19 +122,19 @@
             font-size: 0.9rem;
             min-width: 60px;
         }
+        .book-item button.delete-btn {
+            background: #ef5350;
+        }
+        .book-item button.delete-btn:hover {
+            background: #e53935;
+        }
+        .book-item button.delete-btn:disabled {
+            background: #ffcdd2;
+        }
         .book-title {
             cursor: pointer;
             flex: 1;
             padding: 0.25rem;
-        }
-        .delete-btn {
-            width: auto;
-            padding: 0.25rem 0.5rem;
-            background: #f44336;
-            margin: 0;
-        }
-        .delete-btn:hover {
-            background: #d32f2f;
         }
         .results {
             margin-top: 1.5rem;
@@ -162,16 +162,14 @@
                 <input type="text" id="bookTitle" name="bookTitle" required>
             </div>
             <div class="form-group">
-                <label for="totalLength">Total Length (HH:MM:SS):</label>
-                <input type="text" id="totalLength" name="totalLength">
-                <input type="range" id="totalLengthSlider" min="0" max="50" value="0" step="1">
-                <small>Use the slider for rough adjustment (in hours, 0 to 50).</small>
+                <label for="totalLength">Total Length:</label>
+                <input type="range" id="totalLengthSlider" min="1" max="24" value="8">
+                <input type="text" id="totalLength" value="8:00:00">
             </div>
             <div class="form-group">
-                <label for="currentProgress">Current Progress (HH:MM:SS):</label>
-                <input type="text" id="currentProgress" name="currentProgress">
-                <input type="range" id="currentProgressSlider" min="0" max="50" value="0" step="1">
-                <small>Use the slider for rough adjustment (in hours, 0 to 50).</small>
+                <label for="currentProgress">Current Progress:</label>
+                <input type="range" id="currentProgressSlider" min="0" max="24" value="1">
+                <input type="text" id="currentProgress" value="1:00:00">
             </div>
             <div class="form-group">
                 <label for="speed">Speed (e.g., 1.25):</label>
@@ -282,7 +280,7 @@
                     <span>${book.title}</span>
                     <div class="buttons">
                         <button onclick="loadBook(${book.id})">Load</button>
-                        <button onclick="deleteBook(${book.id})">Delete</button>
+                        <button class="delete-btn" onclick="deleteBook(${book.id})">Delete</button>
                     </div>
                 </div>
             `).join('');
