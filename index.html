@@ -337,6 +337,14 @@
         function calculateProgressData(params) {
             const { totalLength, currentProgress, speed, daysPlan } = params;
 
+            function isValidTimeFormat(time) {
+                const timeRegex = /^\d{1,2}:\d{2}:\d{2}$/;
+                if (!timeRegex.test(time)) return false;
+                
+                const [hours, minutes, seconds] = time.split(':').map(Number);
+                return minutes < 60 && seconds < 60;
+            }
+
             function timeToSeconds(time) {
                 const [hours, minutes, seconds] = time.split(':').map(Number);
                 return hours * 3600 + minutes * 60 + seconds;
@@ -349,8 +357,22 @@
                 return `${h}h ${m}m ${s}s`;
             }
 
+            // Validate time formats
+            if (!isValidTimeFormat(totalLength)) {
+                return { error: 'Total length must be in format hh:mm:ss' };
+            }
+            if (!isValidTimeFormat(currentProgress)) {
+                return { error: 'Current progress must be in format hh:mm:ss' };
+            }
+
             const totalSeconds = timeToSeconds(totalLength);
             const currentSeconds = timeToSeconds(currentProgress);
+
+            // Check if current progress exceeds total length
+            if (currentSeconds > totalSeconds) {
+                return { error: 'Current progress cannot be greater than total length' };
+            }
+
             const remainingSeconds = (totalSeconds - currentSeconds) / speed;
             const progressPercentage = ((currentSeconds / totalSeconds) * 100).toFixed(1);
 
@@ -376,6 +398,15 @@
             };
 
             const result = calculateProgressData(params);
+
+            // Check if there was an error
+            if (result.error) {
+                document.getElementById('progressPercentage').textContent = `Error: ${result.error}`;
+                document.getElementById('remainingTime').textContent = '';
+                document.getElementById('dailyPlan').innerHTML = '';
+                document.getElementById('results').style.display = 'block';
+                return;
+            }
 
             document.getElementById('progressPercentage').textContent = `Progress Percentage: ${result.progressPercentage}%`;
             document.getElementById('remainingTime').textContent = `Remaining Time (at ${result.speed}x speed): ${result.remainingTime}`;
